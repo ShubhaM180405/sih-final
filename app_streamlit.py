@@ -10,7 +10,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from model_inference import analyze_sentiment, analyze_batch
 from utils import sentiment_visualizer as viz
 from utils import data_handler as dh
-from utils import save_chart_as_image
+from utils.utils import save_chart_as_image
 
 st.set_page_config(page_title="E-Consultation Sentiment Analysis", layout="wide")
 
