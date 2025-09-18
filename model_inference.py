@@ -2,6 +2,7 @@ import pandas as pd
 import re
 from transformers import pipeline
 from utils.utils import match_keywords
+
 # Load model
 sentiment_pipeline = pipeline(
     "sentiment-analysis",
@@ -34,17 +35,6 @@ def load_keywords(path: str) -> list:
 NEGATIVE_KEYWORDS = load_keywords("keywords_negative.csv")
 POSITIVE_KEYWORDS = load_keywords("keywords_positive.csv")
 NEUTRAL_KEYWORDS = load_keywords("keywords_neutral.csv")
-
-def match_keywords(text: str, keywords: list) -> int:
-    """
-    Count exact keyword matches in text using word boundaries for precision.
-    """
-    text_lower = text.lower()
-    count = 0
-    for keyword in keywords:
-        pattern = r'\b' + re.escape(keyword.lower()) + r'\b'
-        count += len(re.findall(pattern, text_lower))
-    return count
 
 def adjust_sentiment(text: str, sentiment: str, score: float) -> tuple:
     """
