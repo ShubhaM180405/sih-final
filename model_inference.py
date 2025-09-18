@@ -42,24 +42,36 @@ def adjust_sentiment(text: str, sentiment: str, score: float) -> tuple:
     Returns (main_sentiment, sub_sentiment).
     """
     if not text.strip():
-        return sentiment, sentiment
+        return "Neutral", "Neutral (Pure Neutral)"
     text_lower = text.lower()
     pos_hits = match_keywords(text_lower, POSITIVE_KEYWORDS)
     neg_hits = match_keywords(text_lower, NEGATIVE_KEYWORDS)
     neu_hits = match_keywords(text_lower, NEUTRAL_KEYWORDS)
-    main_sentiment = sentiment
-    sub_sentiment = sentiment
-    if sentiment == "Neutral":
-        if neg_hits > pos_hits:
-            sub_sentiment = "Neutral (Dominantly Negative)"
-        elif pos_hits > neg_hits:
+    
+    # If neutral keywords are present and sentiment is not strongly confident, consider Neutral
+    if neu_hits > 0 and score < 0.9:
+        main_sentiment = "Neutral"
+        if pos_hits > neg_hits:
             sub_sentiment = "Neutral (Dominantly Positive)"
+        elif neg_hits > pos_hits:
+            sub_sentiment = "Neutral (Dominantly Negative)"
         else:
             sub_sentiment = "Neutral (Pure Neutral)"
-    elif sentiment == "Positive" and score < 0.95 and neg_hits >= pos_hits + 2:
-        sub_sentiment = "Neutral (Dominantly Negative)"
-    elif sentiment == "Negative" and score < 0.95 and pos_hits >= neg_hits + 2:
-        sub_sentiment = "Neutral (Dominantly Positive)"
+    else:
+        main_sentiment = sentiment
+        sub_sentiment = sentiment
+        if sentiment == "Neutral":
+            if neg_hits > pos_hits:
+                sub_sentiment = "Neutral (Dominantly Negative)"
+            elif pos_hits > neg_hits:
+                sub_sentiment = "Neutral (Dominantly Positive)"
+            else:
+                sub_sentiment = "Neutral (Pure Neutral)"
+        elif sentiment == "Positive" and score < 0.9 and neg_hits >= pos_hits + 2:
+            sub_sentiment = "Neutral (Dominantly Negative)"
+        elif sentiment == "Negative" and score < 0.9 and pos_hits >= neg_hits + 2:
+            sub_sentiment = "Neutral (Dominantly Positive)"
+    
     return main_sentiment, sub_sentiment
 
 def analyze_sentiment(text: str) -> dict:
@@ -95,5 +107,7 @@ def analyze_batch(comments: list) -> list:
             text = comment["text"]
         else:
             text = str(comment)
-        results.append(analyze_sentiment(text))
+        result = analyze_sentiment(text)
+        result.update({k: v for k, v in comment.items() if k != "text"})
+        results.append(result)
     return results
