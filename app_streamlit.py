@@ -17,6 +17,8 @@ st.set_page_config(page_title="E-Consultation Sentiment Analysis", layout="wide"
 # --- SESSION STATE ---
 if "comments" not in st.session_state:
     st.session_state["comments"] = []
+if "last_uploaded_file" not in st.session_state:
+    st.session_state["last_uploaded_file"] = None
 
 # --- SIDEBAR ---
 st.sidebar.title("➕ Add Comments")
@@ -47,18 +49,25 @@ elif input_method == "Multiple Comments":
 elif input_method == "Upload File":
     uploaded_file = st.sidebar.file_uploader(
         "Upload CSV / XLSX / TXT with comments", 
-        type=["csv", "txt", "xlsx", "xls"]
+        type=["csv", "txt", "xlsx", "xls"],
+        key="file_uploader"
     )
     if uploaded_file is not None:
-        try:
-            df = dh.load_comments(uploaded_file)
-            st.session_state["comments"].extend(df.to_dict("records"))
-            st.success(f"✅ Loaded {len(df)} comments from file")
-        except Exception as e:
-            st.error(f"❌ Could not load file: {e}")
+        if uploaded_file.name != st.session_state["last_uploaded_file"]:
+            try:
+                # Clear previous comments before loading new file
+                st.session_state["comments"] = []
+                df = dh.load_comments(uploaded_file)
+                st.session_state["comments"].extend(df.to_dict("records"))
+                st.session_state["last_uploaded_file"] = uploaded_file.name
+                st.success(f"✅ Loaded {len(df)} comments from file")
+            except Exception as e:
+                st.error(f"❌ Could not load file: {e}")
 
 if st.sidebar.button("Clear All Comments"):
     st.session_state["comments"] = []
+    st.session_state["last_uploaded_file"] = None
+    st.session_state.pop("results", None)
 
 # --- EMPTY INPUT HANDLING ---
 def display_empty_message():
