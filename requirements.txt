@@ -1,0 +1,8 @@
+streamlit
+pandas
+transformers
+torch
+plotly
+reportlab
+python-docx
+openpyxl
